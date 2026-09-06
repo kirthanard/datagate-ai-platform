@@ -1,0 +1,5 @@
+{
+  "payload": [
+    {"product_uid_string": "SKU-99; DROP TABLE transactions;--", "items_count": 1, "total_value": 50.00}
+  ]
+}

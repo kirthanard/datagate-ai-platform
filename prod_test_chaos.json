@@ -1,0 +1,5 @@
+{
+  "payload": [
+    {"unrecognized_junk_column": "corrupted_text_string_field_without_metrics"}
+  ]
+}

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataGate AI Engine — Control Center</title>
+    <style>
+        body { background-color: #0f172a; color: #cbd5e1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; min-height: 100vh; }
+        nav { background-color: #020617; border-bottom: 1px solid #334155; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo-group { display: flex; align-items: center; gap: 12px; }
+        .nav-title { font-size: 20px; font-weight: bold; color: #ffffff; margin: 0; }
+        .nav-subtitle { font-size: 11px; font-family: monospace; color: #34d399; margin: 2px 0 0 0; }
+        .nav-right-controls { display: flex; align-items: center; gap: 16px; }
+        .operator-selector { background-color: #1e293b; color: #f1f5f9; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .operator-selector option { background-color: #0f172a; }
+        .nav-project-badge { background-color: #0f172a; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; font-family: monospace; font-size: 13px; color: #94a3b8; }
+        .nav-project-badge span { color: #f1f5f9; }
+        main { max-width: 1200px; margin: 0 auto; padding: 24px; box-sizing: border-box; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .metric-card { background-color: #020617; border: 1px solid #1e293b; padding: 16px; border-radius: 8px; }
+        .metric-title { font-size: 13px; color: #94a3b8; margin: 0; }
+        .metric-value { font-size: 22px; font-weight: bold; margin: 6px 0 0 0; }
+        .text-green { color: #34d399; }
+        .text-blue { color: #60a5fa; }
+        .text-amber { color: #f59e0b; }
+        .workspace-split { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; }
+        @media (max-width: 768px) { .workspace-split { grid-template-columns: 1fr; } }
+        .panel { background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 550px; }
+        .panel-header { background-color: #0f172a; padding: 14px 16px; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-size: 15px; font-weight: bold; color: #e2e8f0; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .panel-body { padding: 16px; overflow-y: auto; flex: 1; }
+        .btn-refresh { background-color: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-approve { background-color: #059669; color: white; border: none; padding: 12px 24px; font-size: 14px; font-weight: 500; border-radius: 6px; cursor: pointer; flex: 1; }
+        .btn-reject { background-color: #0f172a; color: #94a3b8; border: 1px solid #1e293b; padding: 12px 18px; font-size: 14px; border-radius: 6px; cursor: pointer; }
+        .btn-reject:hover { border-color: #ef4444; color: #ef4444; }
+        .queue-item { background-color: #0f172a; border: 1px solid #1e293b; padding: 14px; border-radius: 6px; margin-bottom: 12px; cursor: pointer; }
+        .queue-item:hover { border-color: #475569; }
+        .queue-meta { display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; margin-bottom: 6px; }
+        .queue-hash { color: #f59e0b; font-weight: bold; }
+        .queue-status { background-color: #020617; padding: 2px 6px; border-radius: 3px; color: #94a3b8; }
+        .queue-fields { font-size: 12px; color: #94a3b8; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .workspace-meta { background-color: #0f172a; padding: 12px; border-radius: 6px; border: 1px solid #1e293b; font-family: monospace; font-size: 12px; margin-bottom: 20px; }
+        .matrix-title { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
+        .matrix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .matrix-col { background-color: #0f172a; border: 1px solid #1e293b; padding: 12px; border-radius: 6px; }
+        .matrix-cell { background-color: #020617; border: 1px solid #1e293b; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 13px; margin-bottom: 8px; }
+        .matrix-cell-mapped { background-color: rgba(5, 150, 105, 0.1); border-color: rgba(5, 150, 105, 0.3); color: #34d399; display: flex; justify-content: space-between; align-items: center; }
+        .badge-linked { font-size: 9px; font-weight: bold; text-transform: uppercase; background-color: #065f46; padding: 1px 4px; border-radius: 2px; }
+        .voter-list-container { background-color: #0f172a; border: 1px solid #1e293b; padding: 10px 14px; border-radius: 6px; font-size: 12px; margin-bottom: 20px; font-family: monospace; color: #94a3b8; }
+        .voter-list-container span { color: #cbd5e1; }
+        .vote-summary { background-color: #0f172a; border: 1px solid #1e293b; padding: 14px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .vote-text h4 { margin: 0; font-size: 14px; color: #f1f5f9; }
+        .vote-text p { margin: 4px 0 0 0; font-size: 11px; color: #94a3b8; }
+        .vote-badge { background-color: #020617; border: 1px solid #1e293b; padding: 8px 16px; border-radius: 6px; font-family: monospace; text-align: center; }
+        .vote-number { font-size: 18px; font-weight: bold; color: #60a5fa; display: block; }
+        .vote-total { font-size: 10px; color: #54647b; }
+        .actions-group { display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid #1e293b; }
+        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #475569; text-align: center; }
+        .empty-icon { font-size: 42px; margin-bottom: 12px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-logo-group">
+            <span style="font-size: 24px;">🛡️</span>
+            <div>
+                <h1 class="nav-title">DataGate AI</h1>
+                <p class="nav-subtitle">STATUS: ACTIVE // SERVERLESS INSTANCE</p>
+            </div>
+        </div>
+        <div class="nav-right-controls">
+            <select id="operator-select" class="operator-selector">
+                <option value="alex@company.com">👤 Alex (Data Engineer)</option>
+                <option value="sarah@company.com">👤 Sarah (Analytics Lead)</option>
+                <option value="david@company.com">👤 David (Security Analyst)</option>
+                <option value="elena@company.com">👤 Elena (DevOps Manager)</option>
+                <option value="ryan@company.com">👤 Ryan (Data Architect)</option>
+            </select>
+            <div class="nav-project-badge">Project: <span>datagate-ai-engine</span></div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="metrics-grid">
+            <div class="metric-card"><p class="metric-title">Semantic Filter Ingestion</p><p class="metric-value text-green">Bypassing Fixed Schemas</p></div>
+            <div class="metric-card"><p class="metric-title">Reinforcement Consensus Tracking</p><p class="metric-value text-blue">Acceptance Score Constraints</p></div>
+            <div class="metric-card"><p class="metric-title">Secure Vault Storage</p><p class="metric-value text-amber">GCS Isolation Active</p></div>
+        </div>
+
+        <div class="workspace-split">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">⏳ Pending Isolation Queue</h2>
+                    <button onclick="fetchPendingQueue()" class="btn-refresh">↻ Refresh</button>
+                </div>
+                <div id="queue-container" class="panel-body">
+                    <p style="text-align: center; color: #475569; font-size: 13px; margin-top: 24px;">Fetching current quarantine instances...</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><h2 class="panel-title">🔍 Active Structural Audit Workspace</h2></div>
+                <div id="workspace-empty" class="empty-state">
+                    <span class="empty-icon">📂</span>
+                    <p style="font-size: 14px; margin: 0;">Select a pending structural shift file from the left queue to begin validation auditing.</p>
+                </div>
+
+                <div id="workspace-active" class="panel-body hidden">
+                    <div class="workspace-meta">
+                        <div style="margin-bottom: 4px;">File ID Hash: <span id="view-hash" style="color:#f59e0b; font-weight:bold;"></span></div>
+                        <div>Target Table: <span style="color:#f1f5f9;">datagate_dw.transactions</span></div>
+                    </div>
+
+                    <div>
+                        <div class="matrix-title">AI Schema Re-Mapping Suggestion</div>
+                        <div class="matrix-grid">
+                            <div class="matrix-col">
+                                <span style="font-size: 10px; font-family: monospace; color: #64748b; display: block; margin-bottom: 6px;">Expected Table Columns</span>
+                                <div class="matrix-cell">product_id</div>
+                                <div class="matrix-cell">quantity</div>
+                                <div class="matrix-cell">revenue</div>
+                            </div>
+                            <div class="matrix-col" style="background-color: rgba(5, 150, 105, 0.03); border-color: rgba(5, 150, 105, 0.2)">
+                                <span style="font-size: 10px; font-family: monospace; color: #059669; display: block; margin-bottom: 6px;">Mapped Ingestion Fields</span>
+                                <div id="mapping-container"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Voter Registry Log Panel Box -->
+                    <div class="voter-list-container">
+                        Voted Operators: <span id="voted-operators-list">None yet</span>
+                    </div>
+
+                    <div class="vote-summary">
+                        <div class="vote-text">
+                            <h4>Human Team Feedback Metrics</h4>
+                            <p>Requires 5 distinct user votes. Promotes to Auto-Pass rule if approval rate > 50%.</p>
+                        </div>
+                        <div class="vote-badge">
+                            <span id="vote-counter" class="vote-number">0</span>
+                            <span class="vote-total">/ 5 Votes</span>
+                        </div>
+                    </div>
+
+                    <div class="actions-group">
+                        <button onclick="castVote('APPROVE')" class="btn-approve">✓ Accept Layout & Cast Approval Vote</button>
+                        <button onclick="castVote('REJECT')" class="btn-reject">✖ Reject & Delete Payload</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- UI Core Client Operations Script -->
+    <script>
+        const VALIDATOR_URL = window.location.origin + "/api/queue";
+const TRIAGE_URL = window.location.origin + "/vote";
+let currentActiveItem = null;
+
+async function fetchPendingQueue() {
+    const container = document.getElementById("queue-container");
+    try {
+        const response = await fetch(VALIDATOR_URL);
+        const items = await response.json();
+        
+        if (!items || items.length === 0) {
+            container.innerHTML = `<div class="empty-state"><span class="empty-icon">🎉</span><p style="font-size:13px; margin:0; color:#64748b;">Ingestion vault clear. No anomalies isolated.</p></div>`;
+            return;
+        }
+
+        container.innerHTML = "";
+        items.forEach(item => {
+            const coreData = item.data;
+            const hash = coreData.template_hash || "unknown";
+            const cols = coreData.original_columns ? coreData.original_columns.join(', ') : 'Unknown fields';
+            
+            const element = document.createElement("div");
+            element.className = "queue-item";
+            element.onclick = () => selectWorkspaceItem(item);
+            element.innerHTML = `
+                <div class="queue-meta"> 
+                    <span class="queue-hash">HASH: ${hash.substring(0,8)}...</span> 
+                    <span class="queue-status">Pending (${coreData.total_votes || 0}/5)</span> 
+                </div> 
+                <p class="queue-fields">Fields: [${cols}]</p>
+            `;
+            container.appendChild(element);
+        });
+    } catch (err) {
+        container.innerHTML = `<p style="text-align: center; color: #ef4444; font-size: 13px;">Configuration Connection Timeout</p>`;
+    }
+}
+
+function selectWorkspaceItem(item) {
+    currentActiveItem = item.data;
+    currentActiveItem.file_id = item.file_id || "";
+    
+    document.getElementById("workspace-empty").classList.add("hidden");
+    document.getElementById("workspace-active").classList.remove("hidden");
+    
+    document.getElementById("view-hash").innerText = currentActiveItem.template_hash;
+    document.getElementById("vote-counter").innerText = currentActiveItem.total_votes || 0;
+    
+    const voters = currentActiveItem.voted_operators || [];
+    document.getElementById("voted-operators-list").innerText = voters.length > 0 ? voters.join(", ") : "None yet";
+    
+    const mapContainer = document.getElementById("mapping-container");
+    mapContainer.innerHTML = "";
+    const mapping = currentActiveItem.suggested_mapping || {};
+    
+    ["product_id", "quantity", "revenue"].forEach(key => {
+        const mappedVal = mapping[key] || "unmapped";
+        const row = document.createElement("div");
+        row.className = "matrix-cell matrix-cell-mapped";
+        row.innerHTML = `<span>➔ ${mappedVal}</span> <span class="badge-linked">Auto-Linked</span>`;
+        mapContainer.appendChild(row);
+    });
+}
+
+async function castVote(voteType) {
+            if(!currentActiveItem) return;
+            const activeOperator = document.getElementById("operator-select").value;
+
+            try {
+                const response = await fetch(TRIAGE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        template_hash: currentActiveItem.template_hash,
+                        vote: voteType,
+                        operator_id: activeOperator
+                    })
+                });
+                
+                const result = await response.json();
+                
+                //  FIX 1: Explicitly terminate function execution with return; to block ghost pop-ups
+                if (response.status === 403) {
+                    alert(`🚨 SECURITY CHECK REJECTED:\n${result.error || "Action Blocked"}`);
+                    return; 
+                }
+
+                if(result.status === "SUCCESS") {
+                    
+                    // FIX 2: Explicitly separate the final consensus logic blocks based on clean string returns
+                    if(result.rule_status === "APPROVED") {
+                        alert("🏆 CONSENSUS ACHIEVED!\nThis schema configuration is officially APPROVED. Future matching streams will auto-pass straight to BigQuery.");
+                    } else if(result.rule_status === "ALREADY_COMPLETED") {
+                        alert("ℹ️ STATE LOG: This configuration footprint has already been finalized and cleared by another operator session.");
+                    } else if(result.rule_status === "BANNED") {
+                        alert("🛑 TEMPLATE BANNED!\nThis schema template was voted down by team consensus and is now blocked from entering the data warehouse.");
+                    } else {
+                        alert(`✓ Vote logged successfully! Current consensus tally: ${result.total_votes_logged}/5. Status: ${result.rule_status}`);
+                    }
+                    
+                    // Clean memory variables and close panels instantly to clear context state loops
+                    document.getElementById("workspace-active").classList.add("hidden");
+                    document.getElementById("workspace-empty").classList.remove("hidden");
+                    currentActiveItem = null;
+                    fetchPendingQueue();
+                } else {
+                    alert("Error cataloging response payload tracking credentials.");
+                }
+            } catch (err) {
+                alert("Network error interfacing database tracking tables.");
+            }
+        }
+
+window.onload = fetchPendingQueue;
+
+</script>
+
+</body>
+</html>

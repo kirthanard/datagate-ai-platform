@@ -1,0 +1,7 @@
+{
+  "expected_intent": "Product logs with product_id (string), quantity (int), revenue (float)",
+  "payload": [
+    {"prod_identifier": "SKU-9920", "qty": 5, "total_earned": 149.99},
+    {"prod_identifier": "SKU-1044", "qty": 12, "total_earned": 240.00}
+  ]
+}
