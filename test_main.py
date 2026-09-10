@@ -51,6 +51,8 @@ def test_validate_endpoint_sql_injection_rejection(client):
     assert response.status_code == 403
     data = json.loads(response.data)
     assert data["status"] == "REJECTED_SECURITY_THREAT"
+    
+    # 💡 SYSTEM SYNCHRONIZATION: Assert that our front-door firewall caught the exploit string!
     assert "malicious payload text signatures" in data["rationale"].lower()
 
 def test_validate_endpoint_prompt_injection_rejection(client):
